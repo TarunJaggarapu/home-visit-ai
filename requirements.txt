@@ -1,0 +1,8 @@
+openai>=1.92
+pydantic>=2.7
+python-dotenv>=1.0
+streamlit>=1.36
+faiss-cpu>=1.8
+numpy>=1.26
+pandas>=2.0
+pypdf>=4.0
