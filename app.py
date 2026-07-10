@@ -210,19 +210,38 @@ with tab_table:
         rows = []
         progress = st.progress(0.0)
         items = list(all_notes.items())
-        for i, (name, text) in enumerate(items):
+        for i, (note_name, text) in enumerate(items):
             data = extract(text).model_dump()
-            # flatten list fields for a readable table
             for key, val in data.items():
                 if isinstance(val, list):
                     data[key] = "; ".join(str(v) for v in val)
-            data = {"note": name, **data}
-            rows.append(data)
+            rows.append({"note": note_name, **data})
             progress.progress((i + 1) / len(items))
-        df = pd.DataFrame(rows)
+        st.session_state["cohort"] = rows
+
+    if "cohort" in st.session_state:
+        import pandas as pd
+        df = pd.DataFrame(st.session_state["cohort"])
+        total = len(df)
+
+        # ---- headline cohort numbers ----
+        st.subheader("Cohort at a glance")
+        high_fall = (df["fall_risk"] == "high").sum()
+        isolated = (df["social_isolation"] == "yes").sum()
+        urgent = (df["follow_up_priority"] == "urgent").sum()
+        med_issues = (df["medication_issues"].str.len() > 0).sum()
+
+        c1, c2, c3, c4, c5 = st.columns(5)
+        c1.metric("Participants", total)
+        c2.metric("High fall risk", int(high_fall))
+        c3.metric("Socially isolated", int(isolated))
+        c4.metric("Medication issues", int(med_issues))
+        c5.metric("Urgent follow-up", int(urgent))
+
+        st.divider()
         st.dataframe(df, use_container_width=True)
         st.download_button(
-            "Download CSV",
+            "⬇ Download CSV",
             df.to_csv(index=False).encode("utf-8"),
             file_name="home_visit_extractions.csv",
             mime="text/csv",
