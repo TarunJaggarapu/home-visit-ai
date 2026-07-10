@@ -89,7 +89,6 @@ with tab_single:
         st.text(note_text)
 
     if st.button("Analyze this note", type="primary"):
-        # compute once, store in session_state so downloads don't wipe it
         with st.spinner("Analyzing..."):
             st.session_state["analysis"] = {
                 "name": name,
@@ -97,48 +96,65 @@ with tab_single:
                 "data": extract(note_text).model_dump(),
             }
 
-    # show results if we have them (survives download-button reruns)
     if st.session_state.get("analysis", {}).get("name") == name:
         result = st.session_state["analysis"]
         data = result["data"]
 
-        col1, col2 = st.columns(2)
-        with col1:
-            st.subheader("Summary")
-            st.write(result["summary"])
+        # ---- Summary on top, full width ----
+        st.subheader("📋 Summary")
+        st.info(result["summary"])
 
-        with col2:
-            st.subheader("Extracted information")
+        # ---- helper: render one field ----
+        def field(label, value):
+            if value is None or value == [] or value == "":
+                return f"**{label}:** _not mentioned_"
+            if isinstance(value, list):
+                items = "".join(f"\n- {v}" for v in value)
+                return f"**{label}:**{items}"
+            return f"**{label}:** {value}"
 
-            def show(label, value):
-                if value is None or value == [] or value == "":
-                    st.markdown(f"**{label}:** _not mentioned_")
-                elif isinstance(value, list):
-                    st.markdown(f"**{label}:**")
-                    for item in value:
-                        st.markdown(f"- {item}")
-                else:
-                    st.markdown(f"**{label}:** {value}")
+        # ---- Extraction grouped into categories, two columns ----
+        st.subheader("🔎 Extracted details")
 
-            show("Age", data["age"])
-            show("Living situation", data["living_situation"])
-            show("Health concerns", data["health_concerns"])
-            show("Medication issues", data["medication_issues"])
-            show("Cognitive concerns", data["cognitive_concerns"])
-            show("Mental health indicators", data["mental_health_indicators"])
-            show("Daily-living independence", data["adl_independence"])
-            show("Mobility aids", data["mobility_aids"])
-            show("Fall risk", data["fall_risk"])
-            show("Fall history", data["fall_history"])
-            show("Safety concerns", data["safety_concerns"])
-            show("Social isolation", data["social_isolation"])
-            show("Caregiver availability", data["caregiver_availability"])
-            show("Social determinants", data["social_determinants"])
-            show("Referrals / services", data["referrals_or_services"])
-            show("Follow-up priority", data["follow_up_priority"])
-            show("Other notable", data["other_notable"])
+        groups = {
+            "🏠 Living & Support": [
+                ("Age", data["age"]),
+                ("Living situation", data["living_situation"]),
+                ("Caregiver availability", data["caregiver_availability"]),
+                ("Social isolation", data["social_isolation"]),
+            ],
+            "❤️ Health": [
+                ("Health concerns", data["health_concerns"]),
+                ("Medication issues", data["medication_issues"]),
+                ("Cognitive concerns", data["cognitive_concerns"]),
+                ("Mental health", data["mental_health_indicators"]),
+            ],
+            "🚶 Function & Falls": [
+                ("Daily-living independence", data["adl_independence"]),
+                ("Mobility aids", data["mobility_aids"]),
+                ("Fall risk", data["fall_risk"]),
+                ("Fall history", data["fall_history"]),
+            ],
+            "⚠️ Safety & Services": [
+                ("Safety concerns", data["safety_concerns"]),
+                ("Social determinants", data["social_determinants"]),
+                ("Referrals / services", data["referrals_or_services"]),
+                ("Follow-up priority", data["follow_up_priority"]),
+                ("Other notable", data["other_notable"]),
+            ],
+        }
 
-        # ---- downloads (JSON + CSV), below both columns ----
+        group_items = list(groups.items())
+        colA, colB = st.columns(2)
+        for i, (group_name, fields) in enumerate(group_items):
+            target = colA if i % 2 == 0 else colB
+            with target:
+                with st.container(border=True):
+                    st.markdown(f"**{group_name}**")
+                    for label, value in fields:
+                        st.markdown(field(label, value))
+
+        # ---- Downloads ----
         import json
         import pandas as pd
 
@@ -147,15 +163,22 @@ with tab_single:
                 for k, v in data.items()}
         csv_str = pd.DataFrame([{"note": result["name"], **flat}]).to_csv(index=False)
 
-        d1, d2 = st.columns(2)
-        with d1:
-            st.download_button("⬇ Download JSON", json_str,
-                               file_name=f"{result['name']}_extraction.json",
-                               mime="application/json")
-        with d2:
-            st.download_button("⬇ Download CSV", csv_str,
-                               file_name=f"{result['name']}_extraction.csv",
-                               mime="text/csv")
+        st.divider()
+        fmt = st.radio("Download format", ["CSV", "JSON"], horizontal=True)
+
+        if fmt == "JSON":
+            payload = json.dumps(data, indent=2)
+            file_name = f"{result['name']}_extraction.json"
+            mime = "application/json"
+        else:
+            flat = {k: ("; ".join(map(str, v)) if isinstance(v, list) else v)
+                    for k, v in data.items()}
+            payload = pd.DataFrame([{"note": result["name"], **flat}]).to_csv(index=False)
+            file_name = f"{result['name']}_extraction.csv"
+            mime = "text/csv"
+
+        st.download_button(f"⬇ Download as {fmt}", payload,
+                           file_name=file_name, mime=mime)
 
 # ---------- Tab 2: RAG Q&A ----------
 with tab_ask:
