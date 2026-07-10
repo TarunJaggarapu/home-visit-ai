@@ -87,14 +87,28 @@ with tab_single:
     note_text = all_notes[name]
     with st.expander("View raw note"):
         st.text(note_text)
+
     if st.button("Analyze this note", type="primary"):
+        # compute once, store in session_state so downloads don't wipe it
+        with st.spinner("Analyzing..."):
+            st.session_state["analysis"] = {
+                "name": name,
+                "summary": summarize(note_text),
+                "data": extract(note_text).model_dump(),
+            }
+
+    # show results if we have them (survives download-button reruns)
+    if st.session_state.get("analysis", {}).get("name") == name:
+        result = st.session_state["analysis"]
+        data = result["data"]
+
         col1, col2 = st.columns(2)
         with col1:
             st.subheader("Summary")
-            st.write(summarize(note_text))
+            st.write(result["summary"])
+
         with col2:
             st.subheader("Extracted information")
-            data = extract(note_text).model_dump()
 
             def show(label, value):
                 if value is None or value == [] or value == "":
@@ -124,12 +138,24 @@ with tab_single:
             show("Follow-up priority", data["follow_up_priority"])
             show("Other notable", data["other_notable"])
 
-            st.download_button(
-                "⬇ Download JSON",
-                json.dumps(data, indent=2),
-                file_name=f"{name}_extraction.json",
-                mime="application/json",
-            )
+        # ---- downloads (JSON + CSV), below both columns ----
+        import json
+        import pandas as pd
+
+        json_str = json.dumps(data, indent=2)
+        flat = {k: ("; ".join(map(str, v)) if isinstance(v, list) else v)
+                for k, v in data.items()}
+        csv_str = pd.DataFrame([{"note": result["name"], **flat}]).to_csv(index=False)
+
+        d1, d2 = st.columns(2)
+        with d1:
+            st.download_button("⬇ Download JSON", json_str,
+                               file_name=f"{result['name']}_extraction.json",
+                               mime="application/json")
+        with d2:
+            st.download_button("⬇ Download CSV", csv_str,
+                               file_name=f"{result['name']}_extraction.csv",
+                               mime="text/csv")
 
 # ---------- Tab 2: RAG Q&A ----------
 with tab_ask:
