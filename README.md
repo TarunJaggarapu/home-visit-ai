@@ -77,15 +77,6 @@ Everything routes through `config.py`. To go **free / local**, install
 name. Note: local models don't support strict structured outputs as reliably, so the
 extraction tab is most accurate with a hosted model.
 
-## Talking points for the research meeting
-
-> "After our email exchange I built a working prototype. It ingests home-visit notes and
-> uses an LLM to summarize each visit and extract structured fields — living situation,
-> health concerns, caregiver support, fall risk, medication and cognitive issues. It also
-> lets you ask questions across all the notes ('which participants are socially isolated?')
-> and export everything to a spreadsheet for analysis. All demo data is synthetic, so it's
-> ethically safe to show."
-
 ## Known limitations
 
 - Extraction quality depends on note wording; always spot-check against the source.
