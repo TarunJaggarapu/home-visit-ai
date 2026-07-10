@@ -4,7 +4,7 @@ Run with:  streamlit run app.py
 """
 import glob
 import os
-
+import json
 import pandas as pd
 import streamlit as st
 
@@ -94,7 +94,42 @@ with tab_single:
             st.write(summarize(note_text))
         with col2:
             st.subheader("Extracted information")
-            st.json(extract(note_text).model_dump())
+            data = extract(note_text).model_dump()
+
+            def show(label, value):
+                if value is None or value == [] or value == "":
+                    st.markdown(f"**{label}:** _not mentioned_")
+                elif isinstance(value, list):
+                    st.markdown(f"**{label}:**")
+                    for item in value:
+                        st.markdown(f"- {item}")
+                else:
+                    st.markdown(f"**{label}:** {value}")
+
+            show("Age", data["age"])
+            show("Living situation", data["living_situation"])
+            show("Health concerns", data["health_concerns"])
+            show("Medication issues", data["medication_issues"])
+            show("Cognitive concerns", data["cognitive_concerns"])
+            show("Mental health indicators", data["mental_health_indicators"])
+            show("Daily-living independence", data["adl_independence"])
+            show("Mobility aids", data["mobility_aids"])
+            show("Fall risk", data["fall_risk"])
+            show("Fall history", data["fall_history"])
+            show("Safety concerns", data["safety_concerns"])
+            show("Social isolation", data["social_isolation"])
+            show("Caregiver availability", data["caregiver_availability"])
+            show("Social determinants", data["social_determinants"])
+            show("Referrals / services", data["referrals_or_services"])
+            show("Follow-up priority", data["follow_up_priority"])
+            show("Other notable", data["other_notable"])
+
+            st.download_button(
+                "⬇ Download JSON",
+                json.dumps(data, indent=2),
+                file_name=f"{name}_extraction.json",
+                mime="application/json",
+            )
 
 # ---------- Tab 2: RAG Q&A ----------
 with tab_ask:
