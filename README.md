@@ -1,85 +1,113 @@
-# AI Assistant for Home Visit Data Analysis
+# 🏠 AI Assistant for Home Visit Data Analysis
 
-An LLM-powered tool that helps social-work researchers analyze unstructured home-visit
-notes. It **summarizes** visits, **extracts** structured fields (age, living situation,
-health concerns, caregiver availability, fall risk, medication issues, cognitive concerns,
-safety concerns), lets researchers **ask questions across all notes** using
-retrieval-augmented generation (RAG), and **exports** the structured data to CSV.
+An LLM-powered tool that helps social-work researchers analyze unstructured
+home-visit notes. It **summarizes** visits, **extracts** structured data across
+17 fields, lets researchers **ask questions across all notes** using
+retrieval-augmented generation (RAG), and **exports** results to CSV or JSON.
 
-> ⚠️ **Ethics note:** All notes in `data/synthetic_notes/` are synthetic (AI-generated /
-> hand-written examples). This project must **never** be used with real patient or
-> participant data.
+**🔗 Live demo:** [home-visit-ai.streamlit.app](https://home-visit-ai.streamlit.app/)
+*(password-protected — available on request)*
+
+> ⚠️ **Ethics note:** All notes in this project are synthetic. It must **never**
+> be used with real patient or participant data.
+
+![Cohort summary view](docs/images/cohort-summary.png)
 
 ## What it does
 
-- **Summarize & Extract** — pick a note, get a plain-language summary plus a
-  schema-enforced JSON extraction.
-- **Ask across all notes** — natural-language Q&A grounded in the notes (RAG), with the
-  source excerpts shown.
-- **Structured table + CSV** — run extraction over every note and download a tidy CSV.
+- **Summarize & Extract** — turns a single home-visit note into a plain-language
+  summary plus a structured, category-grouped profile.
+- **Ask across all notes** — natural-language Q&A grounded in the notes (RAG),
+  with the source excerpts shown so answers are traceable.
+- **Cohort at a glance** — headline stats across all participants (fall risk,
+  isolation, medication issues, urgent follow-ups) at a single click.
+- **Export** — download one note's results as JSON/CSV, or the whole cohort as CSV.
+
+## How it works
+
+It's a Streamlit app that sends home-visit notes to an LLM through the OpenAI API
+to generate summaries and structured JSON. For open-ended questions, it uses RAG:
+embeddings and a FAISS vector search retrieve the most relevant notes, and the LLM
+answers based on those excerpts rather than guessing. A Pydantic schema acts as the
+contract that forces clean, consistent structured output. Streamlit builds the
+interface and hosts it on a public URL.
+
+- **LLM (OpenAI API):** summarizing, extracting, and answering questions
+- **Embeddings + FAISS:** the vector search that powers retrieval
+- **RAG:** connects retrieval to the LLM for grounded, note-based answers
+- **Pydantic schema:** enforces clean structured extraction
+- **Streamlit:** the interface and hosting
+
+![Single-note extraction view](docs/images/single-note.png)
+
+## Extracted fields
+
+The tool extracts 17 fields, grouped into four domains:
+
+**Living & Support:** age, living situation, caregiver availability, social isolation
+**Health:** health concerns, medication issues, cognitive concerns, mental-health indicators
+**Function & Falls:** daily-living independence, mobility aids, fall risk, fall history
+**Safety & Services:** safety concerns, social determinants, referrals/services, follow-up priority, other notable
+
+The schema is defined in `schema.py` — adding or changing a field there updates the
+entire app automatically.
 
 ## Tech stack
 
 | Layer | Tool |
 |---|---|
-| LLM + embeddings | OpenAI (`gpt-4o-mini`, `text-embedding-3-small`) — swappable |
-| Structured extraction | OpenAI Structured Outputs + Pydantic schema |
+| LLM + embeddings | OpenAI (`gpt-4o-mini`, `text-embedding-3-small`) |
+| Structured extraction | OpenAI Structured Outputs + Pydantic |
 | Vector search (RAG) | FAISS |
-| UI | Streamlit |
+| UI + hosting | Streamlit / Streamlit Community Cloud |
 | Data | Synthetic home-visit notes |
 
 ## Project layout
 
-```
 home-visit-ai/
 ├── app.py         # Streamlit UI (3 tabs)
-├── config.py      # model + client in one place (swap provider here)
-├── schema.py      # Pydantic extraction schema (the fields to pull out)
+├── config.py      # model + client in one place
+├── schema.py      # Pydantic extraction schema (the 17 fields)
 ├── extract.py     # summarize() and extract() — the core LLM calls
 ├── rag.py         # embeddings + FAISS index + answer_question()
 ├── requirements.txt
 ├── .env.example
-└── data/synthetic_notes/   # 12 synthetic notes
-```
+├── data/synthetic_notes/   # 15 synthetic notes
+└── docs/images/            # screenshots
 
 ## Setup
 
 ```bash
 # 1. Create and activate a virtual environment
-python -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
+python3 -m venv .venv
+source .venv/bin/activate
 
 # 2. Install dependencies
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 
 # 3. Add your API key
-cp .env.example .env             # then edit .env and paste your OPENAI_API_KEY
+cp .env.example .env      # then edit .env and paste your OPENAI_API_KEY
 ```
 
-Get a key at platform.openai.com. Running the 12 sample notes costs only a few cents
-with `gpt-4o-mini`.
+Running the sample notes costs only a few cents with `gpt-4o-mini`.
 
 ## Run
 
 ```bash
-# Quick command-line test of one note:
-python extract.py data/synthetic_notes/note_01_margaret.txt
+# Command-line test of one note:
+python3 extract.py data/synthetic_notes/note_01_margaret.txt
 
 # Full app:
 streamlit run app.py
 ```
 
-## Switching the LLM provider (optional)
-
-Everything routes through `config.py`. To go **free / local**, install
-[Ollama](https://ollama.com), `ollama pull llama3.1`, then set the client to:
-`OpenAI(base_url="http://localhost:11434/v1", api_key="ollama")` and use a local model
-name. Note: local models don't support strict structured outputs as reliably, so the
-extraction tab is most accurate with a hosted model.
-
 ## Known limitations
 
-- Extraction quality depends on note wording; always spot-check against the source.
-- Character-based chunking is simple by design; sentence/section chunking could improve
-  retrieval on longer documents.
-- Not validated for clinical use — this is a research/portfolio prototype.
+- **Extraction vs. interpretation:** the list fields (what was said) are reliable;
+  the judgment fields (fall risk, follow-up priority) are the model's interpretation
+  and would need clinician validation.
+- Extraction quality depends on note wording; results should always be spot-checked
+  against the source note.
+- Built and tuned for aging/home-visit research; a different population would need
+  schema fields adapted to its variables.
+- A research/portfolio prototype — not validated for clinical use.
