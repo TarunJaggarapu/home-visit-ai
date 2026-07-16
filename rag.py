@@ -68,8 +68,12 @@ def answer_question(index: NotesIndex, question: str, k: int = 4):
                 "role": "system",
                 "content": (
                     "Answer the question using ONLY the note excerpts provided. "
-                    "Cite the source note name(s) in brackets. If the answer is not "
-                    "in the excerpts, say you cannot find it in the notes."
+                    "Cite the source note name(s) in brackets. Only include a "
+                    "participant if the excerpts CLEARLY and directly support every "
+                    "part of the question — do not stretch or infer to make someone "
+                    "fit. If a case is borderline or only partially matches, either "
+                    "leave it out or explicitly flag it as uncertain. If nothing in "
+                    "the excerpts answers the question, say you cannot find it."
                 ),
             },
             {"role": "user", "content": f"Excerpts:\n{context}\n\nQuestion: {question}"},

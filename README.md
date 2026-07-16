@@ -23,6 +23,14 @@ retrieval-augmented generation (RAG), and **exports** results to CSV or JSON.
   isolation, medication issues, urgent follow-ups) at a single click.
 - **Export** — download one note's results as JSON/CSV, or the whole cohort as CSV.
 
+## Potential research applications
+
+- Summarizing field notes quickly after home visits
+- Flagging participants who may need urgent follow-up
+- Tracking changes in caregiver burden or risk over time
+- Supporting large-scale analysis of qualitative social-work data that would be
+  slow to code by hand
+
 ## How it works
 
 It's a Streamlit app that sends home-visit notes to an LLM through the OpenAI API
@@ -44,10 +52,13 @@ interface and hosts it on a public URL.
 
 The tool extracts 17 fields, grouped into four domains:
 
-**Living & Support:** age, living situation, caregiver availability, social isolation
-**Health:** health concerns, medication issues, cognitive concerns, mental-health indicators
-**Function & Falls:** daily-living independence, mobility aids, fall risk, fall history
-**Safety & Services:** safety concerns, social determinants, referrals/services, follow-up priority, other notable
+- **Living & Support:** age, living situation, caregiver availability, social isolation
+- **Health:** health concerns, medication issues, cognitive concerns, mental-health indicators
+- **Function & Falls:** daily-living independence, mobility aids, fall risk, fall history
+- **Safety & Services:** safety concerns, social determinants, referrals/services, follow-up priority, other notable
+
+The fields were chosen to capture the dimensions most relevant to aging and
+social-work research — health status, social support, safety, and care needs.
 
 The schema is defined in `schema.py` — adding or changing a field there updates the
 entire app automatically.
