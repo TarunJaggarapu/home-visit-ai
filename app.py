@@ -11,8 +11,8 @@ import streamlit as st
 from extract import summarize, extract
 from rag import NotesIndex, answer_question
 
-st.set_page_config(page_title="Home Visit AI Assistant", layout="wide")
-st.title("🏠 AI Assistant for Home Visit Data")
+st.set_page_config(page_title="Home Visit Analysis", layout="wide")
+st.title("LLM-Powered Home Visit Analysis")
 st.caption("All notes shown here are synthetic. Do not upload real patient data.")
 
 NOTES_DIR = "data/synthetic_notes"

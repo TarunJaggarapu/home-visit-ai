@@ -1,4 +1,4 @@
-# 🏠 AI Assistant for Home Visit Data Analysis
+# LLM-Powered Home Visit Analysis for Social Work Research
 
 An LLM-powered tool that helps social-work researchers analyze unstructured
 home-visit notes. It **summarizes** visits, **extracts** structured data across
@@ -9,7 +9,8 @@ retrieval-augmented generation (RAG), and **exports** results to CSV or JSON.
 *(password-protected — available on request)*
 
 > ⚠️ **Ethics note:** All notes in this project are synthetic. It must **never**
-> be used with real patient or participant data.
+> be used with real patient or participant data. This prototype is intended solely
+> for research exploration and educational purposes.
 
 ![Cohort summary view](docs/images/cohort-summary.png)
 
@@ -21,7 +22,7 @@ retrieval-augmented generation (RAG), and **exports** results to CSV or JSON.
   with the source excerpts shown so answers are traceable.
 
   ![Ask across all notes](docs/images/ask-across-notes.png)
-  
+
 - **Cohort at a glance** — headline stats across all participants (fall risk,
   isolation, medication issues, urgent follow-ups) at a single click.
 - **Export** — download one note's results as JSON/CSV, or the whole cohort as CSV.
@@ -127,3 +128,10 @@ streamlit run app.py
 - Built and tuned for aging/home-visit research; a different population would need
   schema fields adapted to its variables.
 - A research/portfolio prototype — not validated for clinical use.
+
+## Future work
+
+- Evaluate extraction quality against manually coded (human-annotated) notes
+- Collaborate with domain experts to refine the extraction schema for specific studies
+- Support longitudinal analysis across multiple visits for the same participant
+- Explore privacy-preserving and local LLM deployments for sensitive data
