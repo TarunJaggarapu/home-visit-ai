@@ -19,6 +19,9 @@ retrieval-augmented generation (RAG), and **exports** results to CSV or JSON.
   summary plus a structured, category-grouped profile.
 - **Ask across all notes** — natural-language Q&A grounded in the notes (RAG),
   with the source excerpts shown so answers are traceable.
+
+  ![Ask across all notes](docs/images/ask-across-notes.png)
+  
 - **Cohort at a glance** — headline stats across all participants (fall risk,
   isolation, medication issues, urgent follow-ups) at a single click.
 - **Export** — download one note's results as JSON/CSV, or the whole cohort as CSV.
@@ -75,6 +78,7 @@ entire app automatically.
 
 ## Project layout
 
+```
 home-visit-ai/
 ├── app.py         # Streamlit UI (3 tabs)
 ├── config.py      # model + client in one place
@@ -85,6 +89,7 @@ home-visit-ai/
 ├── .env.example
 ├── data/synthetic_notes/   # 15 synthetic notes
 └── docs/images/            # screenshots
+```
 
 ## Setup
 
